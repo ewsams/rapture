@@ -16,7 +16,6 @@ export class UserEffects {
             if (blogPost) {
               return UserActions.readArticleSuccess({ blogPost });
             } else {
-              // If the blog post is not found, dispatch a failure action
               return UserActions.readArticleFailure({
                 error: 'Post not found',
               });
