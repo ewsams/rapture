@@ -1,6 +1,10 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BlogService } from 'src/app/Services/blog.service';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/Store';
+import { Observable } from 'rxjs';
+import { BlogPost } from 'src/app/Models/BlogPost.model';
+import { selectSelectedBlogPost } from 'src/app/Store/Selectors/user.selectors';
 
 @Component({
   selector: 'app-display-blog',
@@ -8,7 +12,7 @@ import { BlogService } from 'src/app/Services/blog.service';
   imports: [CommonModule],
   template: `
     <article
-      *ngIf="blogService.selectedBlog$ | async as blog"
+      *ngIf="selectedBlog$ | async as blog"
       class="max-w-4xl mx-auto p-4"
     >
       <header class="bg-gray-100 p-6 rounded-t-lg shadow-md">
@@ -64,5 +68,9 @@ import { BlogService } from 'src/app/Services/blog.service';
   `,
 })
 export class DisplayBlogComponent {
-  constructor(protected blogService: BlogService) {}
+  selectedBlog$: Observable<BlogPost> | undefined;
+
+  constructor(private store: Store<AppState>) {
+    this.selectedBlog$ = this.store.select(selectSelectedBlogPost);
+  }
 }

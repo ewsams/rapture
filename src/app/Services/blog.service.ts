@@ -8,16 +8,6 @@ import { currentBlogPost } from '../Blogs/CurrentBlogs';
   providedIn: 'root',
 })
 export class BlogService {
-  private selectedBlogSubject: BehaviorSubject<BlogPost | null> =
-    new BehaviorSubject<BlogPost | null>(null);
-
-  public selectedBlog$: Observable<BlogPost | null> =
-    this.selectedBlogSubject.asObservable();
-
-  public selectBlog(blogPost: BlogPost): void {
-    this.selectedBlogSubject.next(blogPost);
-  }
-
   public getBlogPostById(blogPostId: number): Observable<BlogPost> {
     const blogPost = currentBlogPost.find(
       (post) => post.id === blogPostId

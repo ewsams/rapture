@@ -69,7 +69,6 @@ export class BlogComponent {
   ) {}
 
   updateSelectedBlogPost(blog: BlogPost) {
-    this.blogService.selectBlog(blog);
     this.store.dispatch(UserActions.readArticle({ blogPostId: blog.id }));
     this.router.navigate(['/blog', blog.id]);
   }

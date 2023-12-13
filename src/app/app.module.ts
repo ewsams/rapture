@@ -14,7 +14,7 @@ import { ReadyKitComponent } from './Components/ready-kit/ready-kit.component';
 import { CheckoutComponent } from './Components/checkout/checkout.component';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
-import { reducers, UserEffects } from './Store/Reducers';
+import { reducers, UserEffects } from './Store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 @NgModule({
