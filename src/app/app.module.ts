@@ -12,6 +12,10 @@ import { BlogComponent } from './Components/blog/blog.component';
 import { DisplayBlogComponent } from './Components/display-blog/display-blog.component';
 import { ReadyKitComponent } from './Components/ready-kit/ready-kit.component';
 import { CheckoutComponent } from './Components/checkout/checkout.component';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule } from '@ngrx/store';
+import { reducers, UserEffects } from './Store/Reducers';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 @NgModule({
   declarations: [AppComponent],
@@ -27,6 +31,9 @@ import { CheckoutComponent } from './Components/checkout/checkout.component';
     DisplayBlogComponent,
     ReadyKitComponent,
     CheckoutComponent,
+    StoreModule.forRoot(reducers),
+    EffectsModule.forRoot([UserEffects]),
+    StoreDevtoolsModule.instrument(),
   ],
   providers: [],
   bootstrap: [AppComponent],

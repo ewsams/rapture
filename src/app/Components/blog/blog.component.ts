@@ -4,6 +4,8 @@ import { currentBlogPost } from 'src/app/Blogs/CurrentBlogs';
 import { BlogService } from 'src/app/Services/blog.service';
 import { BlogPost } from 'src/app/Models/BlogPost.model';
 import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
+import * as UserActions from '../../Store/Actions/user.actions';
 
 @Component({
   selector: 'app-blog',
@@ -60,10 +62,15 @@ import { Router } from '@angular/router';
 export class BlogComponent {
   blogPosts = currentBlogPost;
 
-  constructor(private blogService: BlogService, private router: Router) {}
+  constructor(
+    private blogService: BlogService,
+    private router: Router,
+    private store: Store
+  ) {}
 
   updateSelectedBlogPost(blog: BlogPost) {
     this.blogService.selectBlog(blog);
+    this.store.dispatch(UserActions.readArticle({ blogPostId: blog.id }));
     this.router.navigate(['/blog', blog.id]);
   }
 }
