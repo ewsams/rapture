@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, of } from 'rxjs';
+import { of } from 'rxjs';
 import { Observable } from 'rxjs/internal/Observable';
 import { BlogPost } from '../Models/BlogPost.model';
 import { currentBlogPost } from '../Blogs/CurrentBlogs';

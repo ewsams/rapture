@@ -1,4 +1,19 @@
-import { Component, Input } from '@angular/core';
+import {
+  Component,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+  Input,
+} from '@angular/core';
+import { Store } from '@ngrx/store';
+import {
+  loadStripe,
+  Stripe,
+  StripeElements,
+  StripeCardElement,
+} from '@stripe/stripe-js';
+import * as PaymentSelectors from '../../Store/Selectors/payment.selectors';
+import * as PaymentActions from '../../Store/Actions/payment.actions';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -290,12 +305,6 @@ import { FormsModule } from '@angular/forms';
           </legend>
           <!-- Cardholder Name -->
           <div class="mb-4">
-            <label
-              class="block text-gray-700 text-sm font-bold mb-2"
-              for="cardholderName"
-            >
-              Cardholder Name
-            </label>
             <input
               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="cardholderName"
@@ -303,52 +312,13 @@ import { FormsModule } from '@angular/forms';
               placeholder="Name on card"
             />
           </div>
-          <!-- Card Number -->
-          <div class="mb-4">
-            <label
-              class="block text-gray-700 text-sm font-bold mb-2"
-              for="cardNumber"
-            >
-              Card Number
-            </label>
-            <input
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="cardNumber"
-              type="text"
-              placeholder="0000 0000 0000 0000"
-            />
-          </div>
-          <!-- Expiration Date -->
-          <div class="mb-4 md:flex md:items-center md:justify-between">
-            <div class="md:w-1/2 mb-4 md:mb-0">
-              <label
-                class="block text-gray-700 text-sm font-bold mb-2"
-                for="expirationDate"
-              >
-                Expiration Date
-              </label>
-              <input
-                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="expirationDate"
-                type="text"
-                placeholder="MM/YY"
-              />
-            </div>
-            <!-- CVV Code -->
-            <div class="md:w-1/4">
-              <label
-                class="block text-gray-700 text-sm font-bold mb-2"
-                for="cvvCode"
-              >
-                CVV Code
-              </label>
-              <input
-                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="cvvCode"
-                type="text"
-                placeholder="123"
-              />
-            </div>
+          <!-- Stripe Card Element Container -->
+          <div class="mt-4">
+            <div
+              id="cardElement"
+              #cardInfo
+              class="p-3 bg-white border border-gray-300 rounded shadow focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            ></div>
           </div>
         </fieldset>
 
@@ -357,15 +327,89 @@ import { FormsModule } from '@angular/forms';
           <button
             class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
             type="submit"
+            (click)="submitPayment()"
           >
             Submit Payment
           </button>
         </div>
       </form>
     </div>
+
+    <div #cardInfo></div>
   `,
 })
-export class PaymentInformationFormComponent {
+export class PaymentInformationFormComponent implements AfterViewInit {
   @Input() totalPrice = 0;
+  @ViewChild('cardInfo', { static: false }) cardInfo: ElementRef | undefined;
   sameAsBilling = true;
+
+  stripe: Stripe | undefined;
+  card: StripeCardElement | undefined;
+  elements: StripeElements | undefined;
+
+  constructor(private store: Store) {
+    // Load Stripe elements and create card element
+    loadStripe(
+      // Replace with your own publishable key
+      '$$$$$$PUBLISHABLE_KEY$$$$$$'
+    ).then((stripe) => {
+      if (!stripe) {
+        throw new Error('Stripe failed to load');
+      }
+      this.stripe = stripe;
+      this.elements = stripe.elements();
+    });
+  }
+
+  ngAfterViewInit() {
+    if (!this.elements) {
+      throw new Error('Stripe elements failed to load');
+    }
+    this.card = this.elements.create('card');
+    this.card.mount(this.cardInfo?.nativeElement);
+  }
+
+  submitPayment() {
+    // Dispatch action to create payment intent
+    const paymentRequest = {
+      amount: 100,
+      currency: 'usd',
+    };
+    this.store.dispatch(PaymentActions.createPaymentIntent({ paymentRequest }));
+
+    // Subscribe to the paymentIntent state
+    this.store
+      .select(PaymentSelectors.selectPaymentIntent)
+      .subscribe((paymentIntent) => {
+        if (paymentIntent && paymentIntent.clientSecret) {
+          this.confirmPayment(paymentIntent.clientSecret);
+        }
+      });
+  }
+
+  private async confirmPayment(clientSecret: string) {
+    if (!this.stripe || !this.card) {
+      throw new Error('Stripe or card element not initialized');
+    }
+
+    try {
+      const result = await this.stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card: this.card },
+      });
+
+      if (result.error) {
+        // Handle error
+        console.error('Payment confirmation error:', result.error.message);
+      } else if (
+        result.paymentIntent &&
+        result.paymentIntent.status === 'succeeded'
+      ) {
+        // Handle successful payment
+        console.log('Payment successful');
+      }
+    } catch (error) {
+      // Handle any other errors
+      console.error('Error during payment confirmation:', error);
+    }
+  }
 }
